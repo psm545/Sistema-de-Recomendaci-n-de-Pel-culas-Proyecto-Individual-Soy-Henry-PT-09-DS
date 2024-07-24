@@ -4,17 +4,14 @@ FROM python:3.9-slim
 # Directorio de trabajo
 WORKDIR /app
 
-# Archivo de requisitos a la imagen
+# Copia el archivo de requisitos y instala las dependencias
 COPY requirements.txt requirements.txt
-
-# Instalacion de las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia del archivo main.py y la carpeta de datos a la imagen
-COPY main.py main.py
-COPY data.parquet data.parquet
+# Copia el resto de la aplicación
+COPY . .
 
-# Puerto en el que la aplicación estará escuchando
+# Expone el puerto que la aplicación usará
 EXPOSE 8000
 
 # Comando para ejecutar la aplicación
