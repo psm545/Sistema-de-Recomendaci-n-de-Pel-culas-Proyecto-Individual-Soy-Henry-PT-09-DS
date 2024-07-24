@@ -8,7 +8,7 @@ import re
 app = FastAPI()
 
 # Cargar el DataFrame desde el archivo Parquet
-data_path = 'data/data.parquet'
+data_path = 'data.parquet'
 try:
     data = pd.read_parquet(data_path)
     data_status = {"status": "DataFrame loaded", "rows": len(data)}
