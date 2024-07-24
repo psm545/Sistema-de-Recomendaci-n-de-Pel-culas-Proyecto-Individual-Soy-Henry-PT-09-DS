@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia del archivo main.py y la carpeta de datos a la imagen
 COPY main.py main.py
-COPY data data
+COPY data
 
 # Puerto en el que la aplicación estará escuchando
 EXPOSE 8000
