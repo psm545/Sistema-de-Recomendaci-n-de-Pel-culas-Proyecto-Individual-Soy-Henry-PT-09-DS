@@ -12,8 +12,10 @@ data_path = 'data.parquet'
 try:
     data = pd.read_parquet(data_path)
     data_status = {"status": "DataFrame loaded", "rows": len(data)}
+    print(data_status)
 except Exception as e:
     data_status = {"status": "Error loading DataFrame", "error": str(e)}
+    print(data_status)
 
 # Convertir 'release_date' a tipo datetime
 data['release_date'] = pd.to_datetime(data['release_date'], errors='coerce')
