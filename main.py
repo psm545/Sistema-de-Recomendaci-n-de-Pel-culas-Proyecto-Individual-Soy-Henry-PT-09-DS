@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
 import pandas as pd
 from typing import Optional
 from unidecode import unidecode
