@@ -5,7 +5,7 @@ from unidecode import unidecode
 import numpy as np
 import re
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None)
 
 # Cargar el DataFrame desde el archivo Parquet
 data_path = 'data.parquet'
@@ -66,6 +66,29 @@ def normalize_cast_names(cast_data):
     return [unidecode(name.lower()) for name in names if name]
 
 data['cast_names_normalized'] = data['cast_names'].apply(normalize_cast_names)
+
+@app.get("/", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title="API Docs"
+    )
+
+@app.get("/openapi.json", include_in_schema=False)
+async def get_open_api_endpoint():
+    return get_openapi(
+        title="FastAPI Movies",
+        version="1.0.0",
+        description="API para consultas de películas",
+        routes=app.routes,
+    )
+
+@app.get("/api-info")
+def read_root():
+    if data is None:
+        raise HTTPException(status_code=500, detail="Error al cargar los datos")
+    return {"message": "Bienvenido a la API de Datos de Películas", "data_status": data_status}
+
 
 @app.get("/")
 def read_root():
