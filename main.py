@@ -92,9 +92,7 @@ def read_root():
     return {"message": "Bienvenido a la API de Datos de Películas", "data_status": data_status}
 
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Movie Data API"}
+
 
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(mes: str):
