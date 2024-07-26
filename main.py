@@ -9,8 +9,6 @@ import numpy as np
 import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.neighbors import NearestNeighbors
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -79,10 +77,10 @@ def combinar_features(row):
     companies = row['company_names'] if isinstance(row['company_names'], str) else ''
     return f"{genres} {companies}".strip()
 
-def recomendar_peliculas(titulo, data, n_recomendaciones=5):
-    logger.info(f"Iniciando recomendación para: {titulo}")
+def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
+    logger.info(f"Iniciando recomendación para: {titulo_pelicula}")
     try:
-        required_columns = ['title', 'genres_names', 'company_names', 'release_year', 'vote_average']
+        required_columns = ['title', 'genres_names', 'company_names', 'vote_average']
         for col in required_columns:
             if col not in data.columns:
                 logger.error(f"Columna faltante: {col}")
@@ -95,7 +93,6 @@ def recomendar_peliculas(titulo, data, n_recomendaciones=5):
             logger.info("Limitando el tamaño del DataFrame para optimizar el rendimiento")
             data = data.sample(n=10000, random_state=42)
         
-        data['release_year'] = pd.to_numeric(data['release_year'], errors='coerce')
         data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
         
         data['title_normalized'] = data['title'].apply(normalizar_texto)
@@ -103,6 +100,7 @@ def recomendar_peliculas(titulo, data, n_recomendaciones=5):
         data['combined_features'] = data.apply(combinar_features, axis=1)
         
         if data['combined_features'].str.strip().str.len().sum() == 0:
+            logger.warning("No hay características combinadas, usando títulos normalizados")
             data['combined_features'] = data['title_normalized']
         
         tfidf = TfidfVectorizer(stop_words='english', min_df=1, max_df=0.9)
@@ -112,42 +110,24 @@ def recomendar_peliculas(titulo, data, n_recomendaciones=5):
             logger.warning("No se pudieron extraer características significativas de los datos.")
             return []
         
-        cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-        
-        titulo_normalizado = normalizar_texto(titulo)
+        titulo_normalizado = normalizar_texto(titulo_pelicula)
         
         idx = data.index[data['title_normalized'] == titulo_normalizado].tolist()
         if not idx:
-            logger.warning(f"La película '{titulo}' no se encuentra en la base de datos.")
+            logger.warning(f"La película '{titulo_pelicula}' no se encuentra en la base de datos.")
             return []
         idx = idx[0]
         
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:n_recomendaciones+1]
+        movie_vector = tfidf_matrix[idx]
+        sim_scores = cosine_similarity(movie_vector, tfidf_matrix).flatten()
+        sim_scores_with_index = list(enumerate(sim_scores))
+        sim_scores_with_index = sorted(sim_scores_with_index, key=lambda x: x[1], reverse=True)
+        sim_scores_with_index = sim_scores_with_index[1:n_recomendaciones+1]
         
-        movie_indices = [i[0] for i in sim_scores]
-        
-        if len(movie_indices) < n_recomendaciones:
-            genres = pd.get_dummies(data['genres_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
-            companies = pd.get_dummies(data['company_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
-            
-            scaler = MinMaxScaler()
-            years = scaler.fit_transform(data['release_year'].values.reshape(-1, 1))
-            ratings = scaler.fit_transform(data['vote_average'].fillna(data['vote_average'].mean()).values.reshape(-1, 1))
-            
-            features = np.hstack((genres.values, companies.values, years, ratings))
-            
-            knn = NearestNeighbors(n_neighbors=n_recomendaciones, metric='euclidean')
-            knn.fit(features)
-            
-            _, indices = knn.kneighbors(features[idx].reshape(1, -1))
-            
-            movie_indices.extend([i for i in indices[0] if i not in movie_indices])
-            movie_indices = movie_indices[:n_recomendaciones]
+        movie_indices = [i[0] for i in sim_scores_with_index]
         
         recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
-        logger.info(f"Recomendación completada para: {titulo}")
+        logger.info(f"Recomendación completada para: {titulo_pelicula}")
         return recomendaciones.values.tolist()
     except Exception as e:
         logger.error(f"Error en recomendar_peliculas: {str(e)}")
