@@ -6,6 +6,10 @@ from typing import Optional
 from unidecode import unidecode
 import numpy as np
 import re
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import NearestNeighbors
 
 app = FastAPI(docs_url=None, redoc_url=None)
 
@@ -49,25 +53,87 @@ data['Crew_job'] = data['Crew_job'].apply(lambda x: unidecode(x.lower()) if isin
 # Aplicar la normalización a la columna 'cast_names'
 def normalize_cast_names(cast_data):
     if isinstance(cast_data, np.ndarray):
-        # Si es un array de NumPy, convertirlo a una lista de strings
         names = [str(name).strip() for name in cast_data]
     elif isinstance(cast_data, str):
-        # Si es una cadena, primero intentar dividir por comas
         if ',' in cast_data:
-            # Eliminar corchetes y dividir por comas
             names = cast_data.strip('[]').split(',')
-            # Eliminar espacios y comillas
             names = [name.strip().strip("'\"") for name in names]
         else:
-            # Si no hay comas, usar el método anterior
             names = re.findall(r"'([^']*)'", cast_data)
     else:
-        # Si no es ni array ni string, devolver una lista vacía
         return []
     
     return [unidecode(name.lower()) for name in names if name]
 
 data['cast_names_normalized'] = data['cast_names'].apply(normalize_cast_names)
+
+def normalizar_texto(texto):
+    return unidecode(str(texto).lower().strip())
+
+def combinar_features(row):
+    genres = row['genres_names'] if isinstance(row['genres_names'], str) else ''
+    companies = row['company_names'] if isinstance(row['company_names'], str) else ''
+    return f"{genres} {companies}".strip()
+
+def recomendar_peliculas(titulo, data, n_recomendaciones=5):
+    required_columns = ['title', 'genres_names', 'company_names', 'release_year', 'vote_average']
+    for col in required_columns:
+        if col not in data.columns:
+            raise ValueError(f"La columna '{col}' no está presente en el DataFrame.")
+    
+    data['release_year'] = pd.to_numeric(data['release_year'], errors='coerce')
+    data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
+    
+    data['title_normalized'] = data['title'].apply(normalizar_texto)
+    
+    data['combined_features'] = data.apply(combinar_features, axis=1)
+    
+    if data['combined_features'].str.strip().str.len().sum() == 0:
+        data['combined_features'] = data['title_normalized']
+    
+    tfidf = TfidfVectorizer(stop_words='english', min_df=1, max_df=0.9)
+    tfidf_matrix = tfidf.fit_transform(data['combined_features'])
+    
+    if tfidf_matrix.shape[1] == 0:
+        print("No se pudieron extraer características significativas de los datos.")
+        return []
+    
+    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    
+    titulo_normalizado = normalizar_texto(titulo)
+    
+    idx = data.index[data['title_normalized'] == titulo_normalizado].tolist()
+    if not idx:
+        print(f"La película '{titulo}' no se encuentra en la base de datos.")
+        return []
+    idx = idx[0]
+    
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:n_recomendaciones+1]
+    
+    movie_indices = [i[0] for i in sim_scores]
+    
+    if len(movie_indices) < n_recomendaciones:
+        genres = pd.get_dummies(data['genres_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
+        companies = pd.get_dummies(data['company_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
+        
+        scaler = MinMaxScaler()
+        years = scaler.fit_transform(data['release_year'].values.reshape(-1, 1))
+        ratings = scaler.fit_transform(data['vote_average'].fillna(data['vote_average'].mean()).values.reshape(-1, 1))
+        
+        features = np.hstack((genres.values, companies.values, years, ratings))
+        
+        knn = NearestNeighbors(n_neighbors=n_recomendaciones, metric='euclidean')
+        knn.fit(features)
+        
+        _, indices = knn.kneighbors(features[idx].reshape(1, -1))
+        
+        movie_indices.extend([i for i in indices[0] if i not in movie_indices])
+        movie_indices = movie_indices[:n_recomendaciones]
+    
+    recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
+    return recomendaciones.values.tolist()
 
 @app.get("/", include_in_schema=False)
 async def custom_swagger_ui_html():
@@ -90,9 +156,6 @@ def read_root():
     if data is None:
         raise HTTPException(status_code=500, detail="Error al cargar los datos")
     return {"message": "Bienvenido a la API de Datos de Películas", "data_status": data_status}
-
-
-
 
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(mes: str):
@@ -168,3 +231,17 @@ def get_director(nombre_director: str):
         peliculas_info.append(info)
     peliculas_list = "\n".join(peliculas_info)
     return {"mensaje": f"El Director: {nombre_director}\n\n{peliculas_list}"}
+
+@app.get("/recomendar/{titulo_pelicula}")
+def obtener_recomendaciones(titulo_pelicula: str):
+    recomendaciones = recomendar_peliculas(titulo_pelicula, data)
+    if recomendaciones:
+        return {
+            "mensaje": f"Recomendaciones para '{titulo_pelicula}':",
+            "recomendaciones": [
+                {"titulo": pelicula, "puntaje": float(puntaje)} 
+                for pelicula, puntaje in recomendaciones
+            ]
+        }
+    else:
+        raise HTTPException(status_code=404, detail="No se pudieron generar recomendaciones.")
