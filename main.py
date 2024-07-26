@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
@@ -11,6 +12,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import NearestNeighbors
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(docs_url=None, redoc_url=None)
 
 # Cargar el DataFrame desde el archivo Parquet
@@ -18,10 +22,10 @@ data_path = 'data.parquet'
 try:
     data = pd.read_parquet(data_path)
     data_status = {"status": "DataFrame loaded", "rows": len(data)}
-    print(data_status)
+    logger.info(f"Data status: {data_status}")
 except Exception as e:
     data_status = {"status": "Error loading DataFrame", "error": str(e)}
-    print(data_status)
+    logger.error(f"Data loading error: {data_status}")
 
 # Convertir 'release_date' a tipo datetime
 data['release_date'] = pd.to_datetime(data['release_date'], errors='coerce')
@@ -76,64 +80,78 @@ def combinar_features(row):
     return f"{genres} {companies}".strip()
 
 def recomendar_peliculas(titulo, data, n_recomendaciones=5):
-    required_columns = ['title', 'genres_names', 'company_names', 'release_year', 'vote_average']
-    for col in required_columns:
-        if col not in data.columns:
-            raise ValueError(f"La columna '{col}' no está presente en el DataFrame.")
-    
-    data['release_year'] = pd.to_numeric(data['release_year'], errors='coerce')
-    data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
-    
-    data['title_normalized'] = data['title'].apply(normalizar_texto)
-    
-    data['combined_features'] = data.apply(combinar_features, axis=1)
-    
-    if data['combined_features'].str.strip().str.len().sum() == 0:
-        data['combined_features'] = data['title_normalized']
-    
-    tfidf = TfidfVectorizer(stop_words='english', min_df=1, max_df=0.9)
-    tfidf_matrix = tfidf.fit_transform(data['combined_features'])
-    
-    if tfidf_matrix.shape[1] == 0:
-        print("No se pudieron extraer características significativas de los datos.")
-        return []
-    
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-    
-    titulo_normalizado = normalizar_texto(titulo)
-    
-    idx = data.index[data['title_normalized'] == titulo_normalizado].tolist()
-    if not idx:
-        print(f"La película '{titulo}' no se encuentra en la base de datos.")
-        return []
-    idx = idx[0]
-    
-    sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1:n_recomendaciones+1]
-    
-    movie_indices = [i[0] for i in sim_scores]
-    
-    if len(movie_indices) < n_recomendaciones:
-        genres = pd.get_dummies(data['genres_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
-        companies = pd.get_dummies(data['company_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
+    logger.info(f"Iniciando recomendación para: {titulo}")
+    try:
+        required_columns = ['title', 'genres_names', 'company_names', 'release_year', 'vote_average']
+        for col in required_columns:
+            if col not in data.columns:
+                logger.error(f"Columna faltante: {col}")
+                raise ValueError(f"La columna '{col}' no está presente en el DataFrame.")
         
-        scaler = MinMaxScaler()
-        years = scaler.fit_transform(data['release_year'].values.reshape(-1, 1))
-        ratings = scaler.fit_transform(data['vote_average'].fillna(data['vote_average'].mean()).values.reshape(-1, 1))
+        logger.info("Todas las columnas requeridas están presentes")
+
+        # Limitar el tamaño del DataFrame si es muy grande
+        if len(data) > 10000:
+            logger.info("Limitando el tamaño del DataFrame para optimizar el rendimiento")
+            data = data.sample(n=10000, random_state=42)
         
-        features = np.hstack((genres.values, companies.values, years, ratings))
+        data['release_year'] = pd.to_numeric(data['release_year'], errors='coerce')
+        data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
         
-        knn = NearestNeighbors(n_neighbors=n_recomendaciones, metric='euclidean')
-        knn.fit(features)
+        data['title_normalized'] = data['title'].apply(normalizar_texto)
         
-        _, indices = knn.kneighbors(features[idx].reshape(1, -1))
+        data['combined_features'] = data.apply(combinar_features, axis=1)
         
-        movie_indices.extend([i for i in indices[0] if i not in movie_indices])
-        movie_indices = movie_indices[:n_recomendaciones]
-    
-    recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
-    return recomendaciones.values.tolist()
+        if data['combined_features'].str.strip().str.len().sum() == 0:
+            data['combined_features'] = data['title_normalized']
+        
+        tfidf = TfidfVectorizer(stop_words='english', min_df=1, max_df=0.9)
+        tfidf_matrix = tfidf.fit_transform(data['combined_features'])
+        
+        if tfidf_matrix.shape[1] == 0:
+            logger.warning("No se pudieron extraer características significativas de los datos.")
+            return []
+        
+        cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+        
+        titulo_normalizado = normalizar_texto(titulo)
+        
+        idx = data.index[data['title_normalized'] == titulo_normalizado].tolist()
+        if not idx:
+            logger.warning(f"La película '{titulo}' no se encuentra en la base de datos.")
+            return []
+        idx = idx[0]
+        
+        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        sim_scores = sim_scores[1:n_recomendaciones+1]
+        
+        movie_indices = [i[0] for i in sim_scores]
+        
+        if len(movie_indices) < n_recomendaciones:
+            genres = pd.get_dummies(data['genres_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
+            companies = pd.get_dummies(data['company_names'].fillna('').str.split().apply(pd.Series).stack()).groupby(level=0).sum()
+            
+            scaler = MinMaxScaler()
+            years = scaler.fit_transform(data['release_year'].values.reshape(-1, 1))
+            ratings = scaler.fit_transform(data['vote_average'].fillna(data['vote_average'].mean()).values.reshape(-1, 1))
+            
+            features = np.hstack((genres.values, companies.values, years, ratings))
+            
+            knn = NearestNeighbors(n_neighbors=n_recomendaciones, metric='euclidean')
+            knn.fit(features)
+            
+            _, indices = knn.kneighbors(features[idx].reshape(1, -1))
+            
+            movie_indices.extend([i for i in indices[0] if i not in movie_indices])
+            movie_indices = movie_indices[:n_recomendaciones]
+        
+        recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
+        logger.info(f"Recomendación completada para: {titulo}")
+        return recomendaciones.values.tolist()
+    except Exception as e:
+        logger.error(f"Error en recomendar_peliculas: {str(e)}")
+        raise
 
 @app.get("/", include_in_schema=False)
 async def custom_swagger_ui_html():
@@ -234,14 +252,30 @@ def get_director(nombre_director: str):
 
 @app.get("/recomendar/{titulo_pelicula}")
 def obtener_recomendaciones(titulo_pelicula: str):
-    recomendaciones = recomendar_peliculas(titulo_pelicula, data)
-    if recomendaciones:
-        return {
-            "mensaje": f"Recomendaciones para '{titulo_pelicula}':",
-            "recomendaciones": [
-                {"titulo": pelicula, "puntaje": float(puntaje)} 
-                for pelicula, puntaje in recomendaciones
-            ]
-        }
-    else:
-        raise HTTPException(status_code=404, detail="No se pudieron generar recomendaciones.")
+    try:
+        recomendaciones = recomendar_peliculas(titulo_pelicula, data)
+        if recomendaciones:
+            return {
+                "mensaje": f"Recomendaciones para '{titulo_pelicula}':",
+                "recomendaciones": [
+                    {"titulo": pelicula, "puntaje": float(puntaje)} 
+                    for pelicula, puntaje in recomendaciones
+                ]
+            }
+        else:
+            return {"mensaje": f"No se pudieron generar recomendaciones para '{titulo_pelicula}'"}
+    except Exception as e:
+        logger.error(f"Error al generar recomendaciones: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al generar recomendaciones: {str(e)}")
+
+@app.get("/health")
+def health_check():
+    try:
+        # Verificar si podemos acceder al DataFrame
+        if data is not None and len(data) > 0:
+            return {"status": "healthy", "data_rows": len(data)}
+        else:
+            return {"status": "unhealthy", "reason": "No data available"}
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {"status": "unhealthy", "reason": str(e)}
