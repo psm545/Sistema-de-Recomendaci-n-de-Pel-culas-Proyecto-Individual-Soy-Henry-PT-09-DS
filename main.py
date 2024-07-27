@@ -222,22 +222,31 @@ def get_director(nombre_director: str):
     director_records = data[(data['Crew_name_normalized'] == nombre_director_normalized) & (data['Crew_job'].str.contains('director', case=False))]
     if director_records.empty:
         not_director_records = data[(data['Crew_name_normalized'] == nombre_director_normalized)]
-        if not_director_records.empty:
+        if not not_director_records.empty:
             crew_job = not_director_records['Crew_job'].values[0] if not_director_records['Crew_job'].notna().any() else 'desconocido'
             return {"mensaje": f"No es director, el {nombre_director} es {crew_job}."}
         else:
             return {"mensaje": f"No se encontró información para {nombre_director}"}
+    
     peliculas_director = director_records[['title', 'release_date', 'revenue', 'budget']]
     peliculas_director['ganancia'] = peliculas_director['revenue'] - peliculas_director['budget']
     peliculas_director['release_date'] = peliculas_director['release_date'].dt.strftime('%Y-%m-%d')
+    
     peliculas_info = []
     for _, row in peliculas_director.iterrows():
-        info = (f"Película: {row['title']}, Fecha de lanzamiento: {row['release_date']}, "
-                f"Retorno individual: {row['revenue']:.0f}, Costo: {row['budget']:.0f}, "
-                f"Ganancia: {row['ganancia']:.0f}")
+        info = {
+            "titulo": row['title'],
+            "fecha_lanzamiento": row['release_date'],
+            "retorno_individual": float(row['revenue']),
+            "costo": float(row['budget']),
+            "ganancia": float(row['ganancia'])
+        }
         peliculas_info.append(info)
-    peliculas_list = "\n".join(peliculas_info)
-    return {"mensaje": f"El Director: {nombre_director}\n\n{peliculas_list}"}
+    
+    return {
+        "mensaje": f"Películas dirigidas por {nombre_director}:",
+        "peliculas": peliculas_info
+    }
 
 @app.get("/recomendar/{titulo_pelicula}")
 def obtener_recomendaciones(titulo_pelicula: str):
