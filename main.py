@@ -72,11 +72,6 @@ data['cast_names_normalized'] = data['cast_names'].apply(normalize_cast_names)
 def normalizar_texto(texto):
     return unidecode(str(texto).lower().strip())
 
-def combinar_features(row):
-    genres = row['genres_names'] if isinstance(row['genres_names'], str) else ''
-    companies = row['company_names'] if isinstance(row['company_names'], str) else ''
-    return f"{genres} {companies}".strip()
-
 def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
     logger.info(f"Iniciando recomendación para: {titulo_pelicula}")
     try:
@@ -94,6 +89,13 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
         
         data['title_normalized'] = data['title'].apply(normalizar_texto)
+        
+        # Modificar la función combinar_features para incluir el título
+        def combinar_features(row):
+            title = row['title_normalized']
+            genres = row['genres_names'] if isinstance(row['genres_names'], str) else ''
+            companies = row['company_names'] if isinstance(row['company_names'], str) else ''
+            return f"{title} {genres} {companies}".strip()
         
         data['combined_features'] = data.apply(combinar_features, axis=1)
         
@@ -120,9 +122,18 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         sim_scores = cosine_similarity(movie_vector, tfidf_matrix).flatten()
         sim_scores_with_index = list(enumerate(sim_scores))
         sim_scores_with_index = sorted(sim_scores_with_index, key=lambda x: x[1], reverse=True)
-        sim_scores_with_index = sim_scores_with_index[1:n_recomendaciones+1]
         
-        movie_indices = [i[0] for i in sim_scores_with_index]
+        # Filtrado adicional
+        filtered_scores = []
+        for i, score in sim_scores_with_index:
+            if i != idx:  # Evitar recomendar la misma película
+                movie_title = data['title_normalized'].iloc[i]
+                if titulo_normalizado in movie_title or score > 0.5:  # Ajusta este umbral según sea necesario
+                    filtered_scores.append((i, score))
+
+        filtered_scores = sorted(filtered_scores, key=lambda x: x[1], reverse=True)[:n_recomendaciones]
+        
+        movie_indices = [i[0] for i in filtered_scores]
         
         recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
         logger.info(f"Recomendación completada para: {titulo_pelicula}")
