@@ -89,9 +89,9 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         logger.info("Todas las columnas requeridas están presentes")
 
         # Limitar el tamaño del DataFrame si es muy grande
-        if len(data) > 25000:
+        if len(data) > 46600:
             logger.info("Limitando el tamaño del DataFrame para optimizar el rendimiento")
-            data = data.sample(n=25000, random_state=42)
+            data = data.sample(n=46600, random_state=42)
         
         data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
         
