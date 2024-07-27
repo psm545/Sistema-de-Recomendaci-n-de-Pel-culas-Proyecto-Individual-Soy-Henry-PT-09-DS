@@ -86,6 +86,11 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
                 logger.error(f"Columna faltante: {col}")
                 raise ValueError(f"La columna '{col}' no está presente en el DataFrame.")
         
+        # Limitar el tamaño del DataFrame si es muy grande
+        if len(data) > 46600:
+            logger.info("Limitando el tamaño del DataFrame para optimizar el rendimiento")
+            data = data.sample(n=46600, random_state=42)
+        
         data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
         
         data['title_normalized'] = data['title'].apply(normalizar_texto)
@@ -103,8 +108,6 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
             logger.warning("No se pudieron extraer características significativas de los datos.")
             return []
         
-        cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-        
         titulo_normalizado = normalizar_texto(titulo_pelicula)
         
         idx = data.index[data['title_normalized'] == titulo_normalizado].tolist()
@@ -113,11 +116,13 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
             return []
         idx = idx[0]
         
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:n_recomendaciones+1]
+        movie_vector = tfidf_matrix[idx]
+        sim_scores = cosine_similarity(movie_vector, tfidf_matrix).flatten()
+        sim_scores_with_index = list(enumerate(sim_scores))
+        sim_scores_with_index = sorted(sim_scores_with_index, key=lambda x: x[1], reverse=True)
+        sim_scores_with_index = sim_scores_with_index[1:n_recomendaciones+1]
         
-        movie_indices = [i[0] for i in sim_scores]
+        movie_indices = [i[0] for i in sim_scores_with_index]
         
         recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
         logger.info(f"Recomendación completada para: {titulo_pelicula}")
