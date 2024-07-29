@@ -81,11 +81,6 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
                 logger.error(f"Columna faltante: {col}")
                 raise ValueError(f"La columna '{col}' no está presente en el DataFrame.")
         
-        # Limitar el tamaño del DataFrame si es muy grande
-        if len(data) > 46600:
-            logger.info("Limitando el tamaño del DataFrame para optimizar el rendimiento")
-            data = data.sample(n=46600, random_state=42)
-        
         data['vote_average'] = pd.to_numeric(data['vote_average'], errors='coerce')
         
         data['title_normalized'] = data['title'].apply(normalizar_texto)
@@ -98,16 +93,8 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         
         data['combined_features'] = data.apply(combinar_features, axis=1)
         
-        if data['combined_features'].str.strip().str.len().sum() == 0:
-            logger.warning("No hay características combinadas, usando títulos normalizados")
-            data['combined_features'] = data['title_normalized']
-        
-        tfidf = TfidfVectorizer(stop_words='english', min_df=1, max_df=0.9)
+        tfidf = TfidfVectorizer(stop_words='english')
         tfidf_matrix = tfidf.fit_transform(data['combined_features'])
-        
-        if tfidf_matrix.shape[1] == 0:
-            logger.warning("No se pudieron extraer características significativas de los datos.")
-            return []
         
         titulo_normalizado = normalizar_texto(titulo_pelicula)
         
@@ -122,23 +109,9 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         sim_scores_with_index = list(enumerate(sim_scores))
         sim_scores_with_index = sorted(sim_scores_with_index, key=lambda x: x[1], reverse=True)
         
-        # Filtrado adicional
-        filtered_scores = []
-        for i, score in sim_scores_with_index:
-            if i != idx:  # Evitar recomendar la misma película
-                movie_title = data['title_normalized'].iloc[i]
-                if (titulo_normalizado in movie_title or 
-                    any(word in movie_title for word in titulo_normalizado.split()) or 
-                    score > 0.3):  # Ajusta este umbral según sea necesario
-                    filtered_scores.append((i, score))
-
-        filtered_scores = sorted(filtered_scores, key=lambda x: x[1], reverse=True)[:n_recomendaciones]
+        sim_scores_with_index = sim_scores_with_index[1:n_recomendaciones+1]
         
-        if not filtered_scores:
-            logger.warning(f"No se encontraron recomendaciones para '{titulo_pelicula}'")
-            return []
-
-        movie_indices = [i[0] for i in filtered_scores]
+        movie_indices = [i[0] for i in sim_scores_with_index]
         
         recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
         logger.info(f"Recomendación completada para: {titulo_pelicula}")
@@ -259,7 +232,7 @@ def obtener_recomendaciones(titulo_pelicula: str):
         recomendaciones = recomendar_peliculas(titulo_pelicula, data)
         if recomendaciones:
             return {
-                "mensaje": f"Recomendaciones usando similitud del coseno para '{titulo_pelicula}':",
+                "mensaje": f"Recomendaciones para '{titulo_pelicula}':",
                 "recomendaciones": [
                     {"titulo": pelicula, "puntaje": float(puntaje)} 
                     for pelicula, puntaje in recomendaciones
