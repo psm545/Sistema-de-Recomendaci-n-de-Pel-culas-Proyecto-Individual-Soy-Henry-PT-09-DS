@@ -90,7 +90,6 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         
         data['title_normalized'] = data['title'].apply(normalizar_texto)
         
-        # Modificar la función combinar_features para incluir el título
         def combinar_features(row):
             title = row['title_normalized']
             genres = row['genres_names'] if isinstance(row['genres_names'], str) else ''
@@ -128,11 +127,17 @@ def recomendar_peliculas(titulo_pelicula: str, data, n_recomendaciones=5):
         for i, score in sim_scores_with_index:
             if i != idx:  # Evitar recomendar la misma película
                 movie_title = data['title_normalized'].iloc[i]
-                if titulo_normalizado in movie_title or score > 0.5:  # Ajusta este umbral según sea necesario
+                if (titulo_normalizado in movie_title or 
+                    any(word in movie_title for word in titulo_normalizado.split()) or 
+                    score > 0.3):  # Ajusta este umbral según sea necesario
                     filtered_scores.append((i, score))
 
         filtered_scores = sorted(filtered_scores, key=lambda x: x[1], reverse=True)[:n_recomendaciones]
         
+        if not filtered_scores:
+            logger.warning(f"No se encontraron recomendaciones para '{titulo_pelicula}'")
+            return []
+
         movie_indices = [i[0] for i in filtered_scores]
         
         recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
