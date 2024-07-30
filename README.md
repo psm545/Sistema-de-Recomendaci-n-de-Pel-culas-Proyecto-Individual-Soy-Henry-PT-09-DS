@@ -6,14 +6,16 @@
 ## Proyecto individual Soy Henry PT09 Felipe Amezquita
 **Julio 2024**
 
-###ARCHIVOS Y LINKS DE INTERES
+### ARCHIVOS Y LINKS DE INTERES
 
 **Link de la implementacion en Render**: [LINK API IMPLEMENTACION RENDER](https://sistema-de-recomendaci-n-de-pel-culas.onrender.com) **puede demorar hasta 50 segundos en cargar por la implementacion de render gratuito, si hay necesidad recarga la pagina despues de eso. 
 
 
 Puedes Ver Archivo [Jupyter Notebook principal](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/Ejercicio%20Individual%201%20Felipe%20Amezquita%20DTP09.ipynb) en el repositorio de como fue el desarrollo total de todo el ejercicio.
 
-Link Video explicativo: 
+Link **Video** explicativo: 
+
+
 
 ### Introducción
 
