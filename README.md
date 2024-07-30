@@ -6,7 +6,14 @@
 ## Proyecto individual Soy Henry PT09 Felipe Amezquita
 **Julio 2024**
 
+###ARCHIVOS Y LINKS DE INTERES
+
+**Link de la implementacion en Render**: [LINK API IMPLEMENTACION RENDER](https://sistema-de-recomendaci-n-de-pel-culas.onrender.com) **puede demorar hasta 50 segundos en cargar por la implementacion de render gratuito, si hay necesidad recarga la pagina despues de eso. 
+
+
 Puedes Ver Archivo [Jupyter Notebook principal](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/Ejercicio%20Individual%201%20Felipe%20Amezquita%20DTP09.ipynb) en el repositorio de como fue el desarrollo total de todo el ejercicio.
+
+Link Video explicativo: 
 
 ### Introducción
 
@@ -114,6 +121,8 @@ Mira el Jupiter Notebook especifico del escalamiento del dataset: [Jupiter Noteb
 
 #### 4. Desarrollo del Sistema de Recomendación
 
+**Link de la implementacion en Render**: [LINK API IMPLEMENTACION RENDER](https://sistema-de-recomendaci-n-de-pel-culas.onrender.com) **puede demorar hasta 50 segundos en cargar por la implementacion de render gratuito, si hay necesidad recarga la pagina despues de eso. 
+
 Mira el Jupiter Notebook especifico de las funciones: [Jupiter Notebook especifico de las funciones](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/Desarrollo%20API.ipynb)
 
 Mira el Jupiter Notebook especifico del ML sistema de recomendacion de peliculas: [Jupiter Notebook especifico de ML sistema de recomendacion de peliculas](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/ML%20SISTEMA%20DE%20RECOMENDACION%20DE%20PELICULAS.ipynb)
@@ -132,7 +141,7 @@ El sistema de recomendación se basa en técnicas de procesamiento de lenguaje n
 #### 4. Despliegue de la API con FastAPI
 Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. Las consultas que proponemos son las siguientes:
 
-
+![Despliegue api](img/img g.jpg)
 
 ##### Endpoints de la API
 1. **cantidad_filmaciones_mes(Mes)**: Devuelve la cantidad de películas estrenadas en el mes consultado.
@@ -147,8 +156,9 @@ Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. L
     
     return f"{cantidad} cantidad de películas fueron estrenadas en el mes de {mes_normalizado}"
 
+     ```
 
-    ```
+![Mes](img/julio.png)
 
 2. **cantidad_filmaciones_dia(Dia)**: Devuelve la cantidad de películas estrenadas en el día consultado.
     ```python
@@ -168,8 +178,10 @@ Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. L
 
 
     ```
+    ![dia](img/dias.png)
+   
 
-3. **score_titulo(titulo_de_la_filmación)**: Devuelve el título, año de estreno y score de la filmación.
+4. **score_titulo(titulo_de_la_filmación)**: Devuelve el título, año de estreno y score de la filmación.
     ```python
     def score_titulo(titulo_de_la_filmacion: str):
     # Normalizar la entrada del usuario
@@ -191,7 +203,9 @@ Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. L
 
     ```
 
-4. **votos_titulo(titulo_de_la_filmación)**: Devuelve el título, cantidad de votos y promedio de votaciones de la filmación.
+   ![pop](img/titulo fimlacion.png)
+
+5. **votos_titulo(titulo_de_la_filmación)**: Devuelve el título, cantidad de votos y promedio de votaciones de la filmación.
     ```python
    def votos_titulo(titulo_de_la_filmacion: str):
     # Normalizar la entrada del usuario
@@ -216,8 +230,9 @@ Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. L
 
 
     ```
+    ![prom](img/votos.png)
 
-5. **get_actor(nombre_actor)**: Devuelve el éxito del actor medido a través del retorno, cantidad de películas y promedio de retorno.
+6. **get_actor(nombre_actor)**: Devuelve el éxito del actor medido a través del retorno, cantidad de películas y promedio de retorno.
     ```python
    def get_actor(nombre_actor: str):
     # Normalizar el nombre del actor ingresado
@@ -238,8 +253,9 @@ Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. L
 
 
     ```
+   ![actor](img/actor.png)
 
-6. **get_director(nombre_director)**: Devuelve el éxito del director medido a través del retorno, nombre de cada película, fecha de lanzamiento, retorno individual, costo y ganancia.
+7. **get_director(nombre_director)**: Devuelve el éxito del director medido a través del retorno, nombre de cada película, fecha de lanzamiento, retorno individual, costo y ganancia.
     ```python
    def get_director(nombre_director: str):
     # Normalizar el nombre del director ingresado
@@ -277,6 +293,7 @@ Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. L
 
 
     ```
+ ![director](img/director.png)
 
 ### Modelo de ML para recomendacion de peliculas
 
@@ -323,9 +340,37 @@ El sistema de recomendación de películas está diseñado para sugerir películ
 
    
 ```
+   ![ml](img/img%20w.jpg)
+
 Mira el Jupiter Notebook especifico del ML sistema de recomendacion de peliculas: [Jupiter Notebook especifico de ML sistema de recomendacion de peliculas](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/ML%20SISTEMA%20DE%20RECOMENDACION%20DE%20PELICULAS.ipynb)
 
+# Documentacion:
+
+Link dataset original [data set original](https://drive.google.com/drive/folders/1X_LdCoGTHJDbD28_dJTxaD4fVuQC9Wt5)
+
+**Link de la implementacion en Render**: [LINK API IMPLEMENTACION RENDER](https://sistema-de-recomendaci-n-de-pel-culas.onrender.com) **puede demorar hasta 50 segundos en cargar por la implementacion de render gratuito, si hay necesidad recarga la pagina despues de eso. 
+
+## Video
+
+Link Video explicativo: 
+
+## Jupiter Notebooks:
+
+Puedes Ver Archivo [Jupyter Notebook principal](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/Ejercicio%20Individual%201%20Felipe%20Amezquita%20DTP09.ipynb) en el repositorio de como fue el desarrollo total de todo el ejercicio.
+
+Puedes ver el [Jupyter Notebook especifico del ETL](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/1.%20TRANSFORMACIONES%20(ETL).ipynb) en el repositorio.
+
+Puedes ver el [Jupiter Notebook especifico del EDA](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/EDA.ipynb) en el repositorio.
+
+Mira el Jupiter Notebook especifico del escalamiento del dataset: [Jupiter Notebook especifico del escalamiento de datos](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/Reescalamiento%20de%20la%20Base%20de%20datos.ipynb)
+
+Mira el Jupiter Notebook especifico de las funciones: [Jupiter Notebook especifico de las funciones](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/Desarrollo%20API.ipynb)
+
+Mira el Jupiter Notebook especifico del ML sistema de recomendacion de peliculas: [Jupiter Notebook especifico de ML sistema de recomendacion de peliculas](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/ML%20SISTEMA%20DE%20RECOMENDACION%20DE%20PELICULAS.ipynb)
 
 ---
 
+ # Licence
+
+Este proyecto fue desarrollado por Felipe Amezquita, Julio 2024, Desarrollo del primer proyecto individual para Soy Henry DSPT-09 
 ¡Gracias por tu interés en este proyecto! Si tienes alguna pregunta o sugerencia, no dudes en abrir un issue o contactarme.
