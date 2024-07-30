@@ -1,7 +1,12 @@
+![Imagen portada](img/Designer-6.jpeg)
+
+
 # Proyecto de Sistema de Recomendación para Plataforma de Streaming
 
 ## Proyecto individual Soy Henry PT09 Felipe Amezquita
 **Julio 2024**
+
+Puedes Ver Archivo [Jupyter Notebook principal](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/Ejercicio%20Individual%201%20Felipe%20Amezquita%20DTP09.ipynb) en el repositorio de como fue el desarrollo total de todo el ejercicio.
 
 ### Introducción
 
@@ -23,6 +28,7 @@ Este proyecto aborda el desarrollo de un sistema de recomendación para una plat
 ### Desarrollo
 
 #### 1. Transformaciones (ETL)
+Puedes ver el [Jupyter Notebook especifico del ETL](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/1.%20TRANSFORMACIONES%20(ETL).ipynb) en el repositorio.
 
 El proceso de Extracción, Transformación y Carga (ETL) es fundamental en el campo de la ciencia de datos y la analítica. En este proyecto, hemos realizado un exhaustivo proceso ETL sobre un conjunto de datos relacionados con películas. El objetivo principal fue preparar los datos para su posterior análisis y uso en una API, mejorando su calidad, estructura y utilidad.
 
@@ -49,6 +55,9 @@ El proceso de Extracción, Transformación y Carga (ETL) es fundamental en el ca
     - Conversión de fechas al formato `yyyy-mm-dd`.
 
 #### 2. Análisis Exploratorio de Datos (EDA)
+
+Puedes ver el [Jupiter Notebook especifico del EDA](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/EDA.ipynb) en el repositorio.
+
 El Análisis Exploratorio de Datos (EDA) es una fase crucial en cualquier proyecto de ciencia de datos. En esta etapa, se estudia el dataset para comprender mejor sus características y relaciones entre las variables.
 
 ##### Objetivos del EDA
@@ -72,8 +81,45 @@ El Análisis Exploratorio de Datos (EDA) es una fase crucial en cualquier proyec
 5. **Análisis de Variables Categóricas**:
     - Frecuencia de géneros (`genres`), compañías de producción (`production_companies`), y países de producción (`production_countries`).
 
-#### 3. Desarrollo del Sistema de Recomendación
+Ejemplos:
+### Mapas de calor
+
+![Mapa de calor 1](img/EDA/10.png)
+
+Podemos ver como es la realcion de los datos entre los generos de las peliculas
+
+![Mapa de calor 2](img/EDA/11.png)
+
+Este mapa de calor es interesante por que nos muestra como el Genero del Drama es el dominte del dataset, al ver la cantidad de peliculas que hay con su calificacion promedio. 
+
+![Top 10 de Peliculas](img/EDA/15.png)
+
+El top 10 de las peliculas mas populares
+
+![Top 10 de las productoras con más peliculas](img/EDA/9.png)
+
+
+Si quieres ver el total del EDA miralo en el siguiente repositorio:  [Jupiter Notebook especifico del EDA](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/EDA.ipynb)
+
+#### 3. Escalamiento de Base de Datos o Dataset
+
+Por la capacidad de procesamiento de Render en la version Gratuita, habia una posibilidad de tener que escalar el dataset, la primera opcion era hacer un escalamento aleatorio con Random, pero despues de hacer el analisis EDA pudimos ver ciertas variables que nos permitieron hacer una escalamiento de la base de datos aleatorio pero priorizando ciertas caracteristicas, como su puntuacion, popularidad, actores, compañia productoras entre otros.
+
+Veras en el dataset la primera funcion que era para hacer un randon, y la segunda que lo hacia pero teniendo en cuenta las caracteristicas para tener un dataset de mejor calidad.
+
+
+Mira el Jupiter Notebook especifico del escalamiento del dataset: [Jupiter Notebook especifico del escalamiento de datos](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/Reescalamiento%20de%20la%20Base%20de%20datos.ipynb)
+
+
+
+#### 4. Desarrollo del Sistema de Recomendación
+
+Mira el Jupiter Notebook especifico de las funciones: [Jupiter Notebook especifico de las funciones](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/Desarrollo%20API.ipynb)
+
+Mira el Jupiter Notebook especifico del ML sistema de recomendacion de peliculas: [Jupiter Notebook especifico de ML sistema de recomendacion de peliculas](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/ML%20SISTEMA%20DE%20RECOMENDACION%20DE%20PELICULAS.ipynb)
+
 El sistema de recomendación se basa en técnicas de procesamiento de lenguaje natural y aprendizaje automático. Utilizamos TF-IDF y similitud de coseno para calcular la similitud entre películas y generar recomendaciones.
+
 
 ##### Paso a paso del desarrollo del sistema de recomendación
 1. **Vectorización de texto**:
@@ -85,6 +131,8 @@ El sistema de recomendación se basa en técnicas de procesamiento de lenguaje n
 
 #### 4. Despliegue de la API con FastAPI
 Proponemos disponibilizar los datos de la empresa usando el framework FastAPI. Las consultas que proponemos son las siguientes:
+
+
 
 ##### Endpoints de la API
 1. **cantidad_filmaciones_mes(Mes)**: Devuelve la cantidad de películas estrenadas en el mes consultado.
@@ -271,11 +319,11 @@ El sistema de recomendación de películas está diseñado para sugerir películ
     
     movie_indices = [i[0] for i in sim_scores]
     recomendaciones = data[['title', 'vote_average']].iloc[movie_indices]
-    
-  
 
 
+   
 ```
+Mira el Jupiter Notebook especifico del ML sistema de recomendacion de peliculas: [Jupiter Notebook especifico de ML sistema de recomendacion de peliculas](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/jpynb/ML%20SISTEMA%20DE%20RECOMENDACION%20DE%20PELICULAS.ipynb)
 
 
 ---
