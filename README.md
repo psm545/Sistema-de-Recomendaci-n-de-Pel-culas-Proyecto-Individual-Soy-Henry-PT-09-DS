@@ -13,7 +13,7 @@
 
 Puedes Ver Archivo [Jupyter Notebook principal](https://github.com/psm545/Sistema-de-Recomendacion-de-Peliculas-Proyecto-Individual-Soy-Henry-PT09-DS-Feljpe-Amezquita/blob/main/Ejercicio%20Individual%201%20Felipe%20Amezquita%20DTP09.ipynb) en el repositorio de como fue el desarrollo total de todo el ejercicio.
 
-Link **Video** explicativo: 
+Link **Video** explicativo: Puedes Ver el video [Dando click aqui, te llevara a youtube](https://youtu.be/6L5z9QwJxlc) en el repositorio de como fue el desarrollo total de todo el ejercicio.
 
 
 
@@ -354,7 +354,7 @@ Link dataset original [data set original](https://drive.google.com/drive/folders
 
 ## Video
 
-Link Video explicativo: 
+Link **Video** explicativo: Puedes Ver el video [Dando click aqui, te llevara a youtube](https://youtu.be/6L5z9QwJxlc) en el repositorio de como fue el desarrollo total de todo el ejercicio.
 
 ## Jupiter Notebooks:
 
